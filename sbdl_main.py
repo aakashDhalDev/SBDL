@@ -51,7 +51,17 @@ if __name__ == '__main__':
     kafka_kv_df = final_df.select(col("payload.contractIdentifier.newValue").alias("key"),
                                   to_json(struct("*")).alias("value"))
 
+    api_key = conf["kafka.api_key"]
+    api_secret = conf["kafka.api_secret"]
 
+    kafka_kv_df.write \
+            .format("kafka") \
+            .option("kafka.bootstrap.servers", conf["kafka.bootstrap.servers"]) \
+            .option("topic", conf["kafka.topic"]) \
+            .option("kafka.security.protocol", conf["kafka.security.protocol"]) \
+            .option("kafka.sasl.jaas.config", conf["kafka.sasl.jaas.config"].format(api_key, api_secret)) \
+            .option("kafka.sasl.mechanism", conf["kafka.sasl.mechanism"]) \
+            .option("kafka.client.dns.lookup", conf["kafka.client.dns.lookup"]) \
+            .save()
 
-    logger.info("Finished creating Spark Session")
-    logger.info("One Last Message")
+    logger.info("Finished sending data to Kafka")
